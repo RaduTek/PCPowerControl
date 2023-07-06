@@ -1,0 +1,79 @@
+esphome:
+    name: pcpowercontrol
+
+esp8266:
+    board: d1_mini
+    early_pin_init: false
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+    encryption:
+        key: "Insert secret key here"
+
+ota:
+    password: "Secret password here"
+
+wifi:
+    ssid: "AP SSID"
+    password: "AP Password"
+
+    # Enable fallback hotspot (captive portal) in case wifi connection fails
+    ap:
+        ssid: "PcPowerControl Fallback Hotspot"
+        password: "Fallback Password"
+
+captive_portal:
+
+light:
+    - platform: monochromatic
+      name: "PC Case Lights"
+      output: case_lights
+
+output:
+    - platform: esp8266_pwm
+      id: case_lights
+      # inverted: yes
+      pin: D6
+
+switch:
+    - platform: gpio
+      name: "PC Power Switch"
+      icon: "mdi:electric-switch"
+      pin: D1 # Power button output pin
+      id: power_short_press
+      inverted: yes
+      restore_mode: DISABLED
+      on_turn_on:
+          - delay: 150ms
+          - switch.turn_off: power_short_press
+
+    - platform: gpio
+      name: "PC Hard Power Off"
+      icon: "mdi:electric-switch"
+      pin: D1 # Power button output pin
+      id: power_long_press
+      inverted: yes
+      restore_mode: DISABLED
+      on_turn_on:
+          - delay: 3500ms
+          - switch.turn_off: power_long_press
+
+    - platform: gpio
+      name: "PC Reset Switch"
+      icon: "mdi:electric-switch"
+      pin: D2 # Power button output pin
+      id: reset_short_press
+      inverted: yes
+      restore_mode: DISABLED
+      on_turn_on:
+          - delay: 150ms
+          - switch.turn_off: reset_short_press
+
+binary_sensor:
+    - platform: gpio
+      pin: D5 # Power detect input pin (readback from Reset button)
+      name: "PC Power State"
+      device_class: power
